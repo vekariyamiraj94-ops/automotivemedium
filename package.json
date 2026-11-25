@@ -1,0 +1,22 @@
+{
+  "name": "automotivemedium-monorepo",
+  "version": "1.0.0",
+  "description": "Automotivemedium - Multi-Brand Car Service Centre Management System",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "test:backend": "npm --prefix backend test",
+    "build:frontend": "npm --prefix frontend run build"
+  },
+  "keywords": [
+    "mern",
+    "automotive",
+    "car-service",
+    "render",
+    "mongodb-atlas"
+  ],
+  "author": "Automotivemedium Team",
+  "license": "ISC"
+}

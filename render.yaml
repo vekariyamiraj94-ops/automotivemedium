@@ -1,0 +1,95 @@
+# Render Infrastructure as Code Blueprint
+# Deployment Specification for Automotivemedium
+
+services:
+  # ----------------------------------------------------------------------
+  # Production Backend Web Service
+  # ----------------------------------------------------------------------
+  - type: web
+    name: automotivemedium-api-prod
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false # Set securely in Render Dashboard (Atlas production cluster)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: CORS_ORIGIN
+        value: https://automotivemedium-web-prod.onrender.com
+
+  # ----------------------------------------------------------------------
+  # Production Frontend Static Site
+  # ----------------------------------------------------------------------
+  - type: static
+    name: automotivemedium-web-prod
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://automotivemedium-api-prod.onrender.com/api
+
+  # ----------------------------------------------------------------------
+  # Staging Backend Web Service
+  # ----------------------------------------------------------------------
+  - type: web
+    name: automotivemedium-api-staging
+    env: node
+    region: oregon
+    plan: free
+    branch: develop
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false # Set securely in Render Dashboard (Atlas staging database)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: CORS_ORIGIN
+        value: https://automotivemedium-web-staging.onrender.com
+
+  # ----------------------------------------------------------------------
+  # Staging Frontend Static Site
+  # ----------------------------------------------------------------------
+  - type: static
+    name: automotivemedium-web-staging
+    region: oregon
+    plan: free
+    branch: develop
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://automotivemedium-api-staging.onrender.com/api
