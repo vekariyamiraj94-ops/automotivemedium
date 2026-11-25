@@ -94,11 +94,12 @@ const seedDatabase = async () => {
 
     console.log('🌱 Seeding Users (Admin, Advisors, Mechanics)...');
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('Admin@123', salt);
+    const hashedPassword = await bcrypt.hash('admin@123', salt);
 
     const users = await User.insertMany([
       {
         name: 'DevOps & System Admin',
+        username: 'admin',
         email: 'admin@automotivemedium.com',
         password: hashedPassword,
         role: 'admin',

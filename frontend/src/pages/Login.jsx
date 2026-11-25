@@ -18,8 +18,9 @@ import { useAuth } from '../context/AuthContext';
 export default function Login({ onLoginSuccess }) {
   const { login, loading } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Pre-filled with requested admin credentials
+  const [email, setEmail] = useState('admin');
+  const [password, setPassword] = useState('admin@123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
@@ -27,15 +28,17 @@ export default function Login({ onLoginSuccess }) {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
 
-  // Input validation
+  // Input validation (supports 'admin' username or any email address)
   const validateForm = () => {
-    if (!email.trim()) {
-      setErrorMessage('Please enter your admin email address.');
+    const val = email.trim();
+    if (!val) {
+      setErrorMessage('Please enter your admin username or email address.');
       return false;
     }
+    const isUsername = val.toLowerCase() === 'admin' || !val.includes('@');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      setErrorMessage('Please enter a valid email address format.');
+    if (!isUsername && !emailRegex.test(val)) {
+      setErrorMessage('Please enter a valid username (admin) or email address.');
       return false;
     }
     if (!password) {
@@ -73,8 +76,8 @@ export default function Login({ onLoginSuccess }) {
 
   // Quick fill helper for testing
   const handleQuickFillDemo = () => {
-    setEmail('admin@automotivemedium.com');
-    setPassword('Admin@123');
+    setEmail('admin');
+    setPassword('admin@123');
     setErrorMessage('');
   };
 
@@ -182,17 +185,17 @@ export default function Login({ onLoginSuccess }) {
 
             {/* Sign-in Form */}
             <form onSubmit={handleSubmit} noValidate>
-              {/* Email Address */}
+              {/* Username or Email Address */}
               <div className="form-group-custom">
-                <label htmlFor="admin-email">Email Address</label>
+                <label htmlFor="admin-email">Username or Email Address</label>
                 <div className="input-with-icon">
                   <Mail size={18} className="field-icon" />
                   <input
                     id="admin-email"
-                    type="email"
+                    type="text"
                     required
-                    autoComplete="email"
-                    placeholder="admin@automotivemedium.com"
+                    autoComplete="username"
+                    placeholder="admin or admin@automotivemedium.com"
                     className="custom-input"
                     value={email}
                     onChange={(e) => {
@@ -285,7 +288,7 @@ export default function Login({ onLoginSuccess }) {
                 <span>Fill Demo Admin Credentials</span>
               </button>
               <div className="demo-info-text">
-                Email: <code>admin@automotivemedium.com</code> • Password: <code>Admin@123</code>
+                Username: <code>admin</code> • Password: <code>admin@123</code>
               </div>
             </div>
 
