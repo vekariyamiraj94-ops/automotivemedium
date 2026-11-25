@@ -7,7 +7,7 @@ services:
   # ----------------------------------------------------------------------
   - type: web
     name: automotivemedium-api-prod
-    env: node
+    runtime: node
     region: oregon
     plan: free
     branch: main
@@ -32,14 +32,15 @@ services:
   # ----------------------------------------------------------------------
   # Production Frontend Static Site
   # ----------------------------------------------------------------------
-  - type: static
+  - type: web
     name: automotivemedium-web-prod
+    runtime: static
     region: oregon
     plan: free
     branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*
@@ -53,7 +54,7 @@ services:
   # ----------------------------------------------------------------------
   - type: web
     name: automotivemedium-api-staging
-    env: node
+    runtime: node
     region: oregon
     plan: free
     branch: develop
@@ -78,14 +79,15 @@ services:
   # ----------------------------------------------------------------------
   # Staging Frontend Static Site
   # ----------------------------------------------------------------------
-  - type: static
+  - type: web
     name: automotivemedium-web-staging
+    runtime: static
     region: oregon
     plan: free
     branch: develop
     rootDir: frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: ./dist
     routes:
       - type: rewrite
         source: /*
