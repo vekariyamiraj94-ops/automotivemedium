@@ -4,6 +4,8 @@
   "description": "Automotivemedium - Multi-Brand Car Service Centre Management System",
   "private": true,
   "scripts": {
+    "start": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run backend\" \"npm run frontend\"",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run backend\" \"npm run frontend\"",
     "install:all": "npm --prefix backend install && npm --prefix frontend install",
     "backend": "npm --prefix backend run dev",
     "frontend": "npm --prefix frontend run dev",
@@ -18,5 +20,8 @@
     "mongodb-atlas"
   ],
   "author": "Automotivemedium Team",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
 }
