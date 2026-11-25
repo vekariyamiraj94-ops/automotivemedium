@@ -50,15 +50,27 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
-    } catch (e) {}
+      await api.post('/admin/logout');
+    } catch (e) {
+      try {
+        await api.post('/auth/logout');
+      } catch (err) {}
+    }
     setUser(null);
     localStorage.removeItem('automotivemedium_user');
     localStorage.removeItem('automotivemedium_token');
   };
 
+  const updateUser = (updated) => {
+    setUser((prev) => {
+      const merged = { ...prev, ...updated };
+      localStorage.setItem('automotivemedium_user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

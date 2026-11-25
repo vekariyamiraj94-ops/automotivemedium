@@ -42,6 +42,30 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    avatar: {
+      type: String,
+      default: '',
+    },
+    notifications: {
+      emailNotifications: { type: Boolean, default: true },
+      bookingNotifications: { type: Boolean, default: true },
+      lowStockAlerts: { type: Boolean, default: true },
+      serviceUpdates: { type: Boolean, default: true },
+    },
+    language: {
+      type: String,
+      enum: ['English', 'Hindi', 'Gujarati'],
+      default: 'English',
+    },
+    dateFormat: {
+      type: String,
+      enum: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
+      default: 'DD/MM/YYYY',
+    },
+    lastLogin: {
+      type: Date,
+      default: Date.now,
+    },
     isActive: {
       type: Boolean,
       default: true,

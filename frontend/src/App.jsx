@@ -15,11 +15,16 @@ const Brands = lazy(() => import('./pages/Brands'));
 const ServiceCentres = lazy(() => import('./pages/ServiceCentres'));
 const Reports = lazy(() => import('./pages/Reports'));
 const ServiceHistory = lazy(() => import('./pages/ServiceHistory'));
+const AdminProfile = lazy(() => import('./pages/AdminProfile'));
 
 const pageTitles = {
   dashboard: {
     title: 'Executive Workshop Dashboard',
     subtitle: 'Live multi-brand performance KPIs, booking statuses and revenue trends',
+  },
+  profile: {
+    title: 'Admin Profile & Account Settings',
+    subtitle: 'Manage administrative identity, encrypted credentials, workshop preferences and security',
   },
   bookings: {
     title: 'Service Bookings & Job Cards',
@@ -74,7 +79,7 @@ function MainApp() {
     <div className="app-container">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="main-content">
-        <Navbar title={currentMeta.title} subtitle={currentMeta.subtitle} />
+        <Navbar title={currentMeta.title} subtitle={currentMeta.subtitle} setActiveTab={setActiveTab} />
         <div className="content-body">
           <Suspense
             fallback={
@@ -93,6 +98,7 @@ function MainApp() {
             }
           >
             {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
+            {activeTab === 'profile' && <AdminProfile />}
             {activeTab === 'bookings' && <Bookings />}
             {activeTab === 'vehicles' && <Vehicles />}
             {activeTab === 'customers' && <Customers />}

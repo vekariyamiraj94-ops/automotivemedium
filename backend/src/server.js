@@ -24,6 +24,7 @@ import servicePackageRoutes from './routes/servicePackageRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 dotenv.config();
 
@@ -76,6 +77,7 @@ app.use('/api/service-packages', servicePackageRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Root greeting & status
 app.get('/', (req, res) => {

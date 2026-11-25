@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Activity, LogOut, CheckCircle2 } from 'lucide-react';
 import api from '../services/api';
 
-export default function Navbar({ title, subtitle }) {
+export default function Navbar({ title, subtitle, setActiveTab }) {
   const { user, logout } = useAuth();
   const [health, setHealth] = useState({ status: 'checking', db: 'unknown' });
 
@@ -42,10 +42,21 @@ export default function Navbar({ title, subtitle }) {
           <span>System Healthy (200 OK)</span>
         </div>
 
-        {/* User profile */}
-        <div className="user-badge">
+        {/* User profile with click to open Admin Profile */}
+        <div
+          className="user-badge"
+          onClick={() => setActiveTab && setActiveTab('profile')}
+          title="Click to view & edit Admin Profile"
+          style={{ cursor: 'pointer' }}
+        >
           <div className="user-avatar">
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+            {user?.avatar && user.avatar.length <= 4 ? (
+              user.avatar
+            ) : user?.name ? (
+              user.name.charAt(0).toUpperCase()
+            ) : (
+              'A'
+            )}
           </div>
           <span>{user?.name || 'Administrator'}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'capitalize' }}>

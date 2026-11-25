@@ -13,10 +13,12 @@ import {
   FileSpreadsheet,
   History,
   ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 
 const navItems = [
   { id: 'dashboard', label: 'Admin Dashboard', icon: LayoutDashboard, section: 'Core' },
+  { id: 'profile', label: 'Admin Profile & Settings', icon: UserCheck, section: 'Core' },
   { id: 'bookings', label: 'Service Bookings', icon: CalendarCheck, section: 'Operations' },
   { id: 'vehicles', label: 'Vehicles', icon: Car, section: 'Operations' },
   { id: 'customers', label: 'Customers', icon: Users, section: 'Operations' },
