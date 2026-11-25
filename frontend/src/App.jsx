@@ -1,7 +1,8 @@
 import React, { useState, Suspense, lazy } from 'react';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
 
 // Dynamic Lazy Loading & Code-Splitting for Optimal Bundle Size & Lighthouse Performance
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -58,39 +59,60 @@ const pageTitles = {
   },
 };
 
-export default function App() {
+function MainApp() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+
+  // Protect Admin Dashboard routes: if unauthenticated, show modern login page
+  if (!user) {
+    return <Login onLoginSuccess={() => setActiveTab('dashboard')} />;
+  }
+
   const currentMeta = pageTitles[activeTab] || pageTitles.dashboard;
 
   return (
+    <div className="app-container">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <main className="main-content">
+        <Navbar title={currentMeta.title} subtitle={currentMeta.subtitle} />
+        <div className="content-body">
+          <Suspense
+            fallback={
+              <div
+                className="empty-state"
+                style={{
+                  minHeight: '300px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                }}
+              >
+                <div className="spinner"></div>
+                <p>Loading module bundle...</p>
+              </div>
+            }
+          >
+            {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
+            {activeTab === 'bookings' && <Bookings />}
+            {activeTab === 'vehicles' && <Vehicles />}
+            {activeTab === 'customers' && <Customers />}
+            {activeTab === 'services' && <Services />}
+            {activeTab === 'inventory' && <Inventory />}
+            {activeTab === 'brands' && <Brands />}
+            {activeTab === 'centres' && <ServiceCentres />}
+            {activeTab === 'reports' && <Reports />}
+            {activeTab === 'history' && <ServiceHistory />}
+          </Suspense>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <AuthProvider>
-      <div className="app-container">
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main className="main-content">
-          <Navbar title={currentMeta.title} subtitle={currentMeta.subtitle} />
-          <div className="content-body">
-            <Suspense
-              fallback={
-                <div className="empty-state" style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div className="spinner"></div>
-                  <p>Loading module bundle...</p>
-                </div>
-              }
-            >
-              {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
-              {activeTab === 'bookings' && <Bookings />}
-              {activeTab === 'vehicles' && <Vehicles />}
-              {activeTab === 'customers' && <Customers />}
-              {activeTab === 'services' && <Services />}
-              {activeTab === 'inventory' && <Inventory />}
-              {activeTab === 'brands' && <Brands />}
-              {activeTab === 'centres' && <ServiceCentres />}
-              {activeTab === 'reports' && <Reports />}
-              {activeTab === 'history' && <ServiceHistory />}
-            </Suspense>
-          </div>
-        </main>
-      </div>
+      <MainApp />
     </AuthProvider>
   );
 }

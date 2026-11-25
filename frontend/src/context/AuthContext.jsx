@@ -6,14 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('automotivemedium_user');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          _id: 'default-admin-id',
-          name: 'DevOps & System Admin',
-          email: 'admin@automotivemedium.com',
-          role: 'admin',
-        };
+    return saved ? JSON.parse(saved) : null;
   });
   const [loading, setLoading] = useState(false);
 
