@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, AlertCircle, Plus, Search, CheckCircle2, X } from 'lucide-react';
+import { Package, AlertCircle, Plus, Search, CheckCircle2, X, Edit, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
 export default function Inventory() {
@@ -9,6 +9,8 @@ export default function Inventory() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [alert, setAlert] = useState({ type: '', message: '' });
 
   const [formData, setFormData] = useState({
     partNumber: '',
@@ -32,6 +34,7 @@ export default function Inventory() {
       if (res.data) setParts(res.data);
     } catch (e) {
       console.error(e);
+      setAlert({ type: 'error', message: 'Failed to load inventory from backend.' });
     } finally {
       setLoading(false);
     }
@@ -41,29 +44,103 @@ export default function Inventory() {
     fetchInventory();
   }, [search, categoryFilter, lowStockOnly]);
 
-  const handleCreatePart = async (e) => {
+  useEffect(() => {
+    if (alert.message) {
+      const t = setTimeout(() => setAlert({ type: '', message: '' }), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [alert]);
+
+  const handleOpenAdd = () => {
+    setEditingId(null);
+    setFormData({
+      partNumber: '',
+      name: '',
+      category: 'Engine',
+      unitCost: 500,
+      sellingPrice: 850,
+      stockQuantity: 20,
+      minReorderThreshold: 5,
+      supplier: 'Automotive Genuine Spares Ltd',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (part) => {
+    setEditingId(part._id);
+    setFormData({
+      partNumber: part.partNumber || '',
+      name: part.name || '',
+      category: part.category || 'Engine',
+      unitCost: part.unitCost || 0,
+      sellingPrice: part.sellingPrice || 0,
+      stockQuantity: part.stockQuantity || 0,
+      minReorderThreshold: part.minReorderThreshold || 5,
+      supplier: part.supplier || 'Automotive Genuine Spares Ltd',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/inventory', formData);
+      if (editingId) {
+        await api.put(`/inventory/${editingId}`, formData);
+        setAlert({ type: 'success', message: 'Inventory part updated successfully!' });
+      } else {
+        await api.post('/inventory', formData);
+        setAlert({ type: 'success', message: 'New spare part added to inventory!' });
+      }
       setIsModalOpen(false);
-      setFormData({
-        partNumber: '',
-        name: '',
-        category: 'Engine',
-        unitCost: 500,
-        sellingPrice: 850,
-        stockQuantity: 20,
-        minReorderThreshold: 5,
-        supplier: 'Automotive Genuine Spares Ltd',
-      });
       fetchInventory();
     } catch (err) {
-      alert(`Failed to add part: ${err.message}`);
+      setAlert({ type: 'error', message: err.message || 'Operation failed' });
+    }
+  };
+
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete "${name}" from inventory?`)) return;
+    try {
+      await api.delete(`/inventory/${id}`);
+      setAlert({ type: 'success', message: 'Part removed from inventory.' });
+      fetchInventory();
+    } catch (err) {
+      setAlert({ type: 'error', message: err.message || 'Delete failed' });
+    }
+  };
+
+  const handleStockAdjust = async (part, delta) => {
+    const newQty = Math.max(0, (part.stockQuantity || 0) + delta);
+    try {
+      await api.put(`/inventory/${part._id}`, { stockQuantity: newQty });
+      setParts((prev) =>
+        prev.map((p) => (p._id === part._id ? { ...p, stockQuantity: newQty } : p))
+      );
+    } catch (err) {
+      setAlert({ type: 'error', message: 'Failed to adjust stock' });
     }
   };
 
   return (
     <div className="card">
+      {alert.message && (
+        <div style={{
+          padding: '12px 16px',
+          marginBottom: '16px',
+          borderRadius: 'var(--radius-md)',
+          background: alert.type === 'success' ? '#ecfdf5' : '#fef2f2',
+          color: alert.type === 'success' ? '#065f46' : '#991b1b',
+          border: `1px solid ${alert.type === 'success' ? '#a7f3d0' : '#fecaca'}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '14px',
+        }}>
+          {alert.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          <span>{alert.message}</span>
+        </div>
+      )}
+
       <div className="card-header">
         <div className="card-title">
           <h3>Spare Parts & Consumables Inventory</h3>
@@ -97,7 +174,7 @@ export default function Inventory() {
             <AlertCircle size={15} />
             <span>{lowStockOnly ? 'Show All' : 'Low Stock Alerts'}</span>
           </button>
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+          <button className="btn btn-primary" onClick={handleOpenAdd}>
             <Plus size={16} />
             <span>Add Part</span>
           </button>
@@ -115,6 +192,7 @@ export default function Inventory() {
               <th>Cost Price</th>
               <th>Retail Price</th>
               <th>Supplier</th>
+              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -131,20 +209,60 @@ export default function Inventory() {
                       <span className="badge badge-purple">{p.category}</span>
                     </td>
                     <td>
-                      <span className={`badge ${isLow ? 'badge-red' : 'badge-green'}`}>
-                        {isLow ? `Low Stock (${p.stockQuantity} left)` : `${p.stockQuantity} units`}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className={`badge ${isLow ? 'badge-red' : 'badge-green'}`}>
+                          {isLow ? `Low Stock (${p.stockQuantity})` : `${p.stockQuantity} in stock`}
+                        </span>
+                        <div style={{ display: 'inline-flex', gap: '2px' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '2px 6px', fontSize: '11px' }}
+                            title="Decrement stock"
+                            onClick={() => handleStockAdjust(p, -1)}
+                          >
+                            -
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '2px 6px', fontSize: '11px' }}
+                            title="Increment stock"
+                            onClick={() => handleStockAdjust(p, 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
                     </td>
                     <td>₹{p.unitCost?.toLocaleString('en-IN')}</td>
                     <td><strong>₹{p.sellingPrice?.toLocaleString('en-IN')}</strong></td>
                     <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{p.supplier}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '8px' }}>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '4px 8px' }}
+                          title="Edit Part"
+                          onClick={() => handleOpenEdit(p)}
+                        >
+                          <Edit size={13} />
+                        </button>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '4px 8px', color: '#ef4444' }}
+                          title="Delete Part"
+                          onClick={() => handleDelete(p._id, p.name)}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan="7" className="empty-state">
-                  {loading ? 'Loading spare parts...' : 'No inventory items match criteria.'}
+                <td colSpan="8" className="empty-state">
+                  {loading ? 'Loading spare parts from MongoDB...' : 'No inventory items match criteria.'}
                 </td>
               </tr>
             )}
@@ -154,15 +272,15 @@ export default function Inventory() {
 
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
-              <h3>Add Part to Workshop Inventory</h3>
+              <h3>{editingId ? 'Edit Spare Part' : 'Add Part to Workshop Inventory'}</h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setIsModalOpen(false)}>
                 <X size={16} />
               </button>
             </div>
-            <form onSubmit={handleCreatePart}>
-              <div className="modal-body">
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div className="form-group">
                   <label>Part Number / SKU *</label>
                   <input
@@ -200,9 +318,9 @@ export default function Inventory() {
                     <option value="Body">Body</option>
                   </select>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Unit Cost (₹) *</label>
+                    <label>Purchase Unit Cost (₹) *</label>
                     <input
                       type="number"
                       required
@@ -222,9 +340,9 @@ export default function Inventory() {
                     />
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Initial Stock Qty *</label>
+                    <label>Initial Stock Quantity *</label>
                     <input
                       type="number"
                       required
@@ -234,19 +352,30 @@ export default function Inventory() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Reorder Threshold</label>
+                    <label>Min Reorder Threshold *</label>
                     <input
                       type="number"
+                      required
                       className="form-control"
                       value={formData.minReorderThreshold}
                       onChange={(e) => setFormData({ ...formData, minReorderThreshold: Number(e.target.value) })}
                     />
                   </div>
                 </div>
+                <div className="form-group">
+                  <label>Supplier Details</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g. Bosch Authorized Distributor"
+                    value={formData.supplier}
+                    onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                  />
+                </div>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Part</button>
+                <button type="submit" className="btn btn-primary">{editingId ? 'Update Part' : 'Add Part'}</button>
               </div>
             </form>
           </div>

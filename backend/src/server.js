@@ -33,10 +33,19 @@ const app = express();
 // Security & Utility Middlewares
 app.use(helmet());
 
-// Dynamic CORS configuration (Support Render, localhost, and preview URLs)
-const allowedOrigins = process.env.CORS_ORIGIN
+// Dynamic CORS configuration (Support Vercel, Render, localhost, and preview URLs)
+const defaultAllowedOrigins = [
+  'https://automotivemedium.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+];
+
+const envAllowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : [];
+
+const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
 
 app.use(
   cors({
@@ -45,7 +54,9 @@ app.use(
       if (!origin) return callback(null, true);
       if (
         allowedOrigins.indexOf(origin) !== -1 ||
+        origin.endsWith('.vercel.app') ||
         origin.endsWith('.onrender.com') ||
+        origin.includes('localhost') ||
         process.env.NODE_ENV !== 'production'
       ) {
         return callback(null, true);

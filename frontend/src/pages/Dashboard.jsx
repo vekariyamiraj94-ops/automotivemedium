@@ -40,12 +40,12 @@ ChartJS.register(
 
 export default function Dashboard({ setActiveTab }) {
   const [kpis, setKpis] = useState({
-    totalBookings: 8,
-    totalRevenue: 50039,
-    activeServices: 3,
-    completedServices: 4,
-    totalCustomers: 7,
-    totalVehicles: 7,
+    totalBookings: 0,
+    totalRevenue: 0,
+    activeServices: 0,
+    completedServices: 0,
+    totalCustomers: 0,
+    totalVehicles: 0,
   });
 
   const [brandData, setBrandData] = useState([]);
@@ -114,26 +114,17 @@ export default function Dashboard({ setActiveTab }) {
 
   // Monthly Revenue Chart Data
   const monthlyChartData = {
-    labels:
-      monthlyData.length > 0
-        ? monthlyData.map((m) => m.monthLabel || m.monthYear)
-        : ['Sep 2026', 'Oct 2026', 'Nov 2026'],
+    labels: monthlyData.map((m) => m.monthLabel || m.monthYear),
     datasets: [
       {
         label: 'Labour Revenue',
-        data:
-          monthlyData.length > 0
-            ? monthlyData.map((m) => m.labourRevenue || 0)
-            : [7696, 5097, 8898],
+        data: monthlyData.map((m) => m.labourRevenue || 0),
         backgroundColor: '#3b82f6',
         borderRadius: 6,
       },
       {
         label: 'Spare Parts Revenue',
-        data:
-          monthlyData.length > 0
-            ? monthlyData.map((m) => m.partsRevenue || 0)
-            : [4400, 4700, 9900],
+        data: monthlyData.map((m) => m.partsRevenue || 0),
         backgroundColor: '#10b981',
         borderRadius: 6,
       },
@@ -142,16 +133,10 @@ export default function Dashboard({ setActiveTab }) {
 
   // Brand Distribution Doughnut Chart Data
   const brandChartData = {
-    labels:
-      brandData.length > 0
-        ? brandData.map((b) => b.brandName)
-        : ['Maruti Suzuki', 'Hyundai', 'Tata Motors', 'Toyota', 'Mahindra', 'Honda'],
+    labels: brandData.map((b) => b.brandName),
     datasets: [
       {
-        data:
-          brandData.length > 0
-            ? brandData.map((b) => b.totalBookings)
-            : [3, 2, 2, 1, 1, 1],
+        data: brandData.map((b) => b.totalBookings),
         backgroundColor: [
           '#2563eb',
           '#10b981',
@@ -179,21 +164,21 @@ export default function Dashboard({ setActiveTab }) {
         />
         <StatCard
           title="Active Workflows"
-          value={kpis.activeServices || 3}
+          value={kpis.activeServices || 0}
           subtitle="In Progress & Inspection"
           icon={Wrench}
           color="amber"
         />
         <StatCard
           title="Total Bookings"
-          value={kpis.totalBookings || 8}
-          subtitle={`${kpis.completedServices || 4} successfully completed`}
+          value={kpis.totalBookings || 0}
+          subtitle={`${kpis.completedServices || 0} successfully completed`}
           icon={CalendarCheck}
           color="blue"
         />
         <StatCard
-          title="Customers & Fleet"
-          value={`${kpis.totalCustomers || 7} / ${kpis.totalVehicles || 7}`}
+          title="Total Customers"
+          value={kpis.totalCustomers || 0}
           subtitle="Verified car owners"
           icon={Users}
           color="purple"

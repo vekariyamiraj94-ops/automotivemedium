@@ -93,6 +93,16 @@ export default function Bookings() {
     }
   };
 
+  const handleCancelBooking = async (id, num) => {
+    if (!window.confirm(`Are you sure you want to cancel booking ${num}?`)) return;
+    try {
+      await api.put(`/bookings/${id}`, { status: 'Cancelled' });
+      fetchBookings();
+    } catch (err) {
+      alert(`Failed to cancel booking: ${err.message}`);
+    }
+  };
+
   const handleCreateBooking = async (e) => {
     e.preventDefault();
     try {
@@ -208,17 +218,29 @@ export default function Bookings() {
                     </td>
                     <td><strong>₹{(b.totalAmount || 0).toLocaleString('en-IN')}</strong></td>
                     <td>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => {
-                          setSelectedBooking(b);
-                          setNewStatus(b.status);
-                          setIsStatusModalOpen(true);
-                        }}
-                      >
-                        <Edit size={13} />
-                        <span>Advance Stage</span>
-                      </button>
+                      <div style={{ display: 'inline-flex', gap: '6px' }}>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => {
+                            setSelectedBooking(b);
+                            setNewStatus(b.status);
+                            setIsStatusModalOpen(true);
+                          }}
+                        >
+                          <Edit size={13} />
+                          <span>Advance</span>
+                        </button>
+                        {b.status !== 'Cancelled' && b.status !== 'Completed' && (
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ color: '#ef4444' }}
+                            title="Cancel Booking"
+                            onClick={() => handleCancelBooking(b._id, b.bookingNumber)}
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -27,7 +27,7 @@ services:
       - key: JWT_EXPIRE
         value: 7d
       - key: CORS_ORIGIN
-        value: https://automotivemedium-web-prod.onrender.com
+        value: https://automotivemedium.vercel.app,https://automotivemedium-web-prod.onrender.com
 
   # ----------------------------------------------------------------------
   # Production Frontend Static Site

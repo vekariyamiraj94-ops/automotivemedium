@@ -100,11 +100,9 @@ function MainApp() {
             {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
             {activeTab === 'profile' && <AdminProfile />}
             {activeTab === 'bookings' && <Bookings />}
-            {activeTab === 'vehicles' && <Vehicles />}
             {activeTab === 'customers' && <Customers />}
             {activeTab === 'services' && <Services />}
             {activeTab === 'inventory' && <Inventory />}
-            {activeTab === 'brands' && <Brands />}
             {activeTab === 'centres' && <ServiceCentres />}
             {activeTab === 'reports' && <Reports />}
             {activeTab === 'history' && <ServiceHistory />}

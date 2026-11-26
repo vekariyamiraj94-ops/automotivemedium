@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Wrench, Plus, Clock, Tag, X } from 'lucide-react';
+import { Wrench, Plus, Clock, Tag, X, Edit, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 
 export default function Services() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [alert, setAlert] = useState({ type: '', message: '' });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +24,7 @@ export default function Services() {
       if (res.data) setPackages(res.data);
     } catch (e) {
       console.error(e);
+      setAlert({ type: 'error', message: 'Failed to load service packages.' });
     } finally {
       setLoading(false);
     }
@@ -31,32 +34,91 @@ export default function Services() {
     fetchPackages();
   }, []);
 
-  const handleCreate = async (e) => {
+  useEffect(() => {
+    if (alert.message) {
+      const t = setTimeout(() => setAlert({ type: '', message: '' }), 4000);
+      return () => clearTimeout(t);
+    }
+  }, [alert]);
+
+  const handleOpenAdd = () => {
+    setEditingId(null);
+    setFormData({
+      name: '',
+      category: 'Periodic Maintenance',
+      description: '',
+      basePrice: 2999,
+      estimatedDurationHours: 2.5,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (pkg) => {
+    setEditingId(pkg._id);
+    setFormData({
+      name: pkg.name || '',
+      category: pkg.category || 'Periodic Maintenance',
+      description: pkg.description || '',
+      basePrice: pkg.basePrice || 1999,
+      estimatedDurationHours: pkg.estimatedDurationHours || 2,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/service-packages', formData);
+      if (editingId) {
+        await api.put(`/service-packages/${editingId}`, formData);
+        setAlert({ type: 'success', message: 'Service package updated successfully!' });
+      } else {
+        await api.post('/service-packages', formData);
+        setAlert({ type: 'success', message: 'New service package created!' });
+      }
       setIsModalOpen(false);
-      setFormData({
-        name: '',
-        category: 'Periodic Maintenance',
-        description: '',
-        basePrice: 2999,
-        estimatedDurationHours: 2.5,
-      });
       fetchPackages();
     } catch (err) {
-      alert(`Failed to add package: ${err.message}`);
+      setAlert({ type: 'error', message: err.message || 'Operation failed' });
+    }
+  };
+
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to deactivate package "${name}"?`)) return;
+    try {
+      await api.delete(`/service-packages/${id}`);
+      setAlert({ type: 'success', message: 'Service package deactivated.' });
+      fetchPackages();
+    } catch (err) {
+      setAlert({ type: 'error', message: err.message || 'Deactivation failed' });
     }
   };
 
   return (
     <div className="card">
+      {alert.message && (
+        <div style={{
+          padding: '12px 16px',
+          marginBottom: '16px',
+          borderRadius: 'var(--radius-md)',
+          background: alert.type === 'success' ? '#ecfdf5' : '#fef2f2',
+          color: alert.type === 'success' ? '#065f46' : '#991b1b',
+          border: `1px solid ${alert.type === 'success' ? '#a7f3d0' : '#fecaca'}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '14px',
+        }}>
+          {alert.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          <span>{alert.message}</span>
+        </div>
+      )}
+
       <div className="card-header">
         <div className="card-title">
           <h3>Service Packages & Labour Catalog</h3>
           <p>Standardized service tiers, maintenance schedules and estimated bay hours</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
+        <button className="btn btn-primary" onClick={handleOpenAdd}>
           <Plus size={16} />
           <span>New Service Package</span>
         </button>
@@ -86,23 +148,44 @@ export default function Services() {
               </div>
               <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '6px' }}>{pkg.name}</h4>
               <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                {pkg.description || 'Comprehensive inspection and maintenance package.'}
+                {pkg.description || 'Comprehensive multi-brand inspection and maintenance package.'}
               </p>
             </div>
+            
             <div
               style={{
                 marginTop: '16px',
                 paddingTop: '12px',
                 borderTop: '1px solid var(--border)',
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                gap: '6px',
                 fontSize: '12px',
                 color: 'var(--text-muted)',
               }}
             >
-              <Clock size={13} />
-              <span>Duration: ~{pkg.estimatedDurationHours || 2} hours</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={13} />
+                <span>Duration: ~{pkg.estimatedDurationHours || 2} hours</span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '4px 8px' }}
+                  title="Edit Package"
+                  onClick={() => handleOpenEdit(pkg)}
+                >
+                  <Edit size={13} />
+                </button>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  style={{ padding: '4px 8px', color: '#ef4444' }}
+                  title="Deactivate Package"
+                  onClick={() => handleDelete(pkg._id, pkg.name)}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -110,15 +193,15 @@ export default function Services() {
 
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: '500px' }}>
             <div className="modal-header">
-              <h3>Create Service Package</h3>
+              <h3>{editingId ? 'Edit Service Package' : 'Create Service Package'}</h3>
               <button className="btn btn-secondary btn-sm" onClick={() => setIsModalOpen(false)}>
                 <X size={16} />
               </button>
             </div>
-            <form onSubmit={handleCreate}>
-              <div className="modal-body">
+            <form onSubmit={handleSubmit}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div className="form-group">
                   <label>Service Package Name *</label>
                   <input
@@ -170,14 +253,15 @@ export default function Services() {
                   <textarea
                     rows="2"
                     className="form-control"
+                    placeholder="Package inclusions and inspection checklists"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer" style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Package</button>
+                <button type="submit" className="btn btn-primary">{editingId ? 'Update Package' : 'Save Package'}</button>
               </div>
             </form>
           </div>

@@ -25,23 +25,6 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (err) {
-      // Offline fallback: supports requested 'admin' and 'admin@123'
-      if (
-        (identifier.toLowerCase() === 'admin' || identifier.includes('admin')) &&
-        (password === 'admin@123' || password === 'Admin@123')
-      ) {
-        const adminUser = {
-          _id: 'admin-session-id',
-          name: 'DevOps & System Admin',
-          username: 'admin',
-          email: 'admin@automotivemedium.com',
-          role: 'admin',
-          token: 'demo-admin-jwt-token',
-        };
-        setUser(adminUser);
-        localStorage.setItem('automotivemedium_user', JSON.stringify(adminUser));
-        return { success: true };
-      }
       return { success: false, message: err.message || 'Invalid username or password' };
     } finally {
       setLoading(false);
